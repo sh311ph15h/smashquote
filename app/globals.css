@@ -1,26 +1,135 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #070a12;
+  --panel: #0f1420;
+  --panel-2: #161d2c;
+  --border: #232c42;
+  --border-2: #2f3a55;
+  --text: #e6ecf8;
+  --muted: #8593b2;
+  --brand: #22d3ee;
+  --brand-2: #06b6d4;
+  --brand-ink: #04121a;
+  --good: #34d399;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  --radius: 4px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "tnum" 1, "cv01" 1;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* A faint grid — reads as drafting paper rather than decoration. */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-image:
+    linear-gradient(var(--panel) 1px, transparent 1px),
+    linear-gradient(90deg, var(--panel) 1px, transparent 1px);
+  background-size: 44px 44px;
+  background-position: -1px -1px;
 }
+
+* { box-sizing: border-box; }
+
+/* Anything numeric gets fixed-width digits so columns line up. */
+.mono,
+input[inputmode="decimal"],
+input[inputmode="numeric"] {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.btn {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .5rem .9rem; border-radius: var(--radius); font-weight: 600;
+  background: var(--brand); color: var(--brand-ink); border: 1px solid transparent;
+  cursor: pointer; transition: background .12s, border-color .12s, opacity .12s;
+  font-size: .85rem; letter-spacing: .01em;
+}
+.btn:hover { background: var(--brand-2); }
+.btn.secondary { background: var(--panel-2); color: var(--text); border-color: var(--border-2); }
+.btn.secondary:hover { background: #1d2637; border-color: var(--brand); }
+.btn.ghost { background: transparent; color: var(--muted); border-color: transparent; }
+.btn.ghost:hover { color: var(--text); background: var(--panel-2); }
+.btn.danger { background: var(--bad); color: #1a0505; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.input, .select {
+  width: 100%; padding: .48rem .6rem; border-radius: var(--radius);
+  background: #0b1018; border: 1px solid var(--border);
+  color: var(--text); font-size: .875rem;
+  font-family: inherit;
+  transition: border-color .12s, box-shadow .12s;
+}
+.input:hover, .select:hover { border-color: var(--border-2); }
+.input:focus, .select:focus {
+  outline: none; border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgb(34 211 238 / .12);
+}
+.input:disabled { opacity: .4; cursor: not-allowed; }
+.input::placeholder { color: #4d5a76; }
+
+.label {
+  font-size: .68rem; color: var(--muted); font-weight: 600;
+  margin-bottom: .3rem; display: block;
+  text-transform: uppercase; letter-spacing: .07em;
+}
+
+.card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.1rem;
+}
+
+.pill {
+  font-size: .68rem; padding: .2rem .5rem; border-radius: var(--radius);
+  border: 1px solid var(--border-2); color: var(--muted);
+  text-transform: uppercase; letter-spacing: .06em; font-weight: 600;
+  font-family: var(--font-mono), monospace;
+}
+
+/* --- Combo (make / model autocomplete) --- */
+.combo-list {
+  position: absolute; z-index: 50; top: 100%; left: 0; right: 0;
+  margin-top: 3px; max-height: 244px; overflow-y: auto;
+  background: var(--panel-2); border: 1px solid var(--brand);
+  border-radius: var(--radius); padding: 3px;
+  box-shadow: 0 12px 28px rgb(0 0 0 / .55);
+  list-style: none;
+}
+.combo-option {
+  padding: .34rem .55rem; font-size: .85rem; cursor: pointer;
+  border-radius: 2px; color: var(--text);
+}
+.combo-option.is-active { background: var(--brand); color: var(--brand-ink); font-weight: 600; }
+
+/* Scrollbar, so the dropdown doesn't look bolted on */
+.combo-list::-webkit-scrollbar { width: 9px; }
+.combo-list::-webkit-scrollbar-track { background: transparent; }
+.combo-list::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 99px; }
+
+/* Pick-list rows carry more than a label: code, description, panel area and
+   the standard time when the list has one. */
+.pick-list { max-height: 320px; }
+.pick-option {
+  display: grid;
+  grid-template-columns: 62px 1fr auto auto;
+  gap: .55rem; align-items: baseline;
+}
+.pick-code {
+  font-family: var(--font-mono), monospace; font-size: .74rem;
+  color: var(--brand); font-weight: 600;
+}
+.pick-option.is-active .pick-code { color: var(--brand-ink); }
+.pick-desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick-area { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.pick-option.is-active .pick-area { color: var(--brand-ink); opacity: .75; }
+.pick-hrs {
+  font-family: var(--font-mono), monospace; font-size: .72rem;
+  color: var(--good); font-weight: 600;
+}
+.pick-option.is-active .pick-hrs { color: var(--brand-ink); }

@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code local settings
+.claude/settings.local.json
+
+# Crashzone data dumps — may contain customer/vehicle data and third-party
+# proprietary content. Kept local; never committed.
+/data/crashzone/
+
+# editor swap/backup files — a .swp of .env.local holds the same secrets
+*.swp
+*.swo
+*~
