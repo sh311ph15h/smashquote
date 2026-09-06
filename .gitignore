@@ -51,3 +51,7 @@ next-env.d.ts
 *.swp
 *.swo
 *~
+
+# Generated quote/invoice PDFs. These are printed documents for real vehicles
+# and customers even when they start as test runs — keep them out of the repo.
+/public/quote_*.pdf
