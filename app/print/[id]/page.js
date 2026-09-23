@@ -1,10 +1,11 @@
+import { Fragment } from 'react';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentShop } from '@/lib/shop';
 import { money } from '@/lib/money';
+import { groupBySection, isTimeSection } from '@/lib/lineTypes';
+import { areaShort } from '@/lib/panels';
 import PrintButton from './PrintButton';
-
-const TYPE_LABEL = { part: 'Part', paint: 'Paint & materials', labour: 'Labour', sublet: 'Sublet', misc: 'Misc' };
 
 // The stamp across the page is driven by the quote's real status. A "DRAFT"
 // mark left on a document that has gone to a customer reads as an accident, so
@@ -103,12 +104,16 @@ export default async function PrintQuote({ params }) {
           </div>
         </section>
 
-        {/* Line items */}
+        {/* Line items, in the six sections of the estimate. A printed quote
+            that runs the work together reads as a bill; split into sections an
+            assessor can check the R&R times against the paint times without
+            re-sorting it by hand. Empty sections are dropped — a heading with
+            nothing under it is just noise on paper. */}
         <table className="lines">
           <thead>
             <tr>
-              <th className="c-type">Type</th>
               <th className="c-desc">Description</th>
+              <th className="c-area">Panel</th>
               <th className="c-qty">Qty/Hrs</th>
               <th className="c-rate">Rate</th>
               <th className="c-amt">Amount</th>
@@ -118,26 +123,46 @@ export default async function PrintQuote({ params }) {
             {(lines || []).length === 0 && (
               <tr><td colSpan={5} className="empty">No items on this quote.</td></tr>
             )}
-            {(lines || []).map(l => {
-              const time = l.line_type === 'labour' || l.line_type === 'paint';
-              return (
-                <tr key={l.id}>
-                  <td className="c-type">{TYPE_LABEL[l.line_type]}</td>
-                  <td className="c-desc">
-                    {l.description}
-                    {(l.part_number || l.source) && (
-                      <span className="sub">
-                        {l.part_number ? ` ${l.part_number}` : ''}
-                        {l.source ? ` · ${l.source}` : ''}
-                      </span>
-                    )}
-                  </td>
-                  <td className="c-qty num">{time ? l.hours : l.quantity}</td>
-                  <td className="c-rate num">{money(time ? l.rate : l.unit_price)}</td>
-                  <td className="c-amt num">{money(l.line_total)}</td>
-                </tr>
-              );
-            })}
+            {groupBySection(lines || [])
+              .filter(sec => sec.lines.length > 0)
+              .map(sec => {
+                const time = isTimeSection(sec.key);
+                const subtotal = sec.lines.reduce((n, l) => n + Number(l.line_total || 0), 0);
+                const hours = time
+                  ? sec.lines.reduce((n, l) => n + Number(l.hours || 0), 0)
+                  : null;
+                return (
+                  <Fragment key={sec.key}>
+                    <tr className="sec-row">
+                      <th colSpan={5}>{sec.full}</th>
+                    </tr>
+                    {sec.lines.map(l => (
+                      <tr key={l.id}>
+                        <td className="c-desc">
+                          {l.description}
+                          {(l.part_number || l.source) && (
+                            <span className="sub">
+                              {l.part_number ? ` ${l.part_number}` : ''}
+                              {l.source ? ` · ${l.source}` : ''}
+                            </span>
+                          )}
+                        </td>
+                        <td className="c-area">{areaShort(l.area_id) || '—'}</td>
+                        <td className="c-qty num">{time ? l.hours : l.quantity}</td>
+                        <td className="c-rate num">{money(time ? l.rate : l.unit_price)}</td>
+                        <td className="c-amt num">{money(l.line_total)}</td>
+                      </tr>
+                    ))}
+                    <tr className="sec-sub">
+                      <td className="c-desc">{sec.label} subtotal</td>
+                      <td className="c-area" />
+                      <td className="c-qty num">{hours != null ? hours.toFixed(2) : ''}</td>
+                      <td className="c-rate" />
+                      <td className="c-amt num">{money(subtotal)}</td>
+                    </tr>
+                  </Fragment>
+                );
+              })}
           </tbody>
         </table>
 
@@ -247,9 +272,26 @@ const CSS = `
 .lines tbody tr:nth-child(even) td { background: #f7f8fa; }
 .c-qty, .c-rate, .c-amt { text-align: right; white-space: nowrap; }
 .c-amt { font-weight: 600; }
-.c-type { color: #55606f; white-space: nowrap; width: 26mm; }
+.c-area { color: #55606f; white-space: nowrap; width: 24mm; font-size: 8.6pt; }
 .sub { color: #7b8492; font-size: 8.4pt; }
 .empty { text-align: center; color: #8b94a1; padding: 10mm 0; font-style: italic; }
+
+/* Section bands. The zebra striping above counts rows, not lines, so it has to
+   be switched off through the headings or the banding walks out of step. */
+.lines tbody tr.sec-row th {
+  background: #e8ecf3; color: #0f2544; text-align: left;
+  padding: 2mm 3mm; font-size: 8.2pt; font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase;
+  border-bottom: 1px solid #c9d2e0;
+}
+.lines tbody tr.sec-sub td {
+  background: #fff; border-bottom: 1.5px solid #0f2544;
+  font-weight: 600; color: #0f2544; font-size: 9pt;
+}
+.lines tbody tr.sec-row td, .lines tbody tr.sec-sub td { background-image: none; }
+/* Keep a section heading with at least the first line under it. */
+.lines tbody tr.sec-row { break-after: avoid; page-break-after: avoid; }
+.lines tbody tr.sec-sub { break-before: avoid; page-break-before: avoid; }
 
 .totals-wrap { display: flex; justify-content: flex-end; margin-top: 5mm; }
 .totals { border-collapse: collapse; min-width: 72mm; font-size: 10pt; }

@@ -35,8 +35,6 @@ export function Combo({ label, value, onChange, options = [], placeholder, disab
     return () => document.removeEventListener('mousedown', onDocDown);
   }, [open]);
 
-  useEffect(() => { setActive(0); }, [value]);
-
   const choose = (opt) => { onChange(opt); setOpen(false); };
 
   const onKeyDown = (e) => {
@@ -65,7 +63,7 @@ export function Combo({ label, value, onChange, options = [], placeholder, disab
         disabled={disabled}
         placeholder={placeholder}
         value={value ?? ''}
-        onChange={e => { onChange(e.target.value); setOpen(true); }}
+        onChange={e => { onChange(e.target.value); setActive(0); setOpen(true); }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
       />
@@ -160,8 +158,6 @@ export function PickField({ group, value, onChange, onPick, placeholder }) {
     return () => document.removeEventListener('mousedown', onDocDown);
   }, [open]);
 
-  useEffect(() => { setActive(0); }, [value, group]);
-
   const choose = (row) => {
     onChange(row.description);
     onPick?.(row);
@@ -192,7 +188,7 @@ export function PickField({ group, value, onChange, onPick, placeholder }) {
         autoComplete="off"
         placeholder={placeholder}
         value={value ?? ''}
-        onChange={e => { onChange(e.target.value); setOpen(true); }}
+        onChange={e => { onChange(e.target.value); setActive(0); setOpen(true); }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
       />

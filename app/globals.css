@@ -133,3 +133,528 @@ input[inputmode="numeric"] {
   color: var(--good); font-weight: 600;
 }
 .pick-option.is-active .pick-hrs { color: var(--brand-ink); }
+
+/* ===========================================================================
+   APP SHELL
+   The sidebar is a sidebar on a desktop and a strip of buttons across the top
+   on a phone. Photos get taken standing next to a car, so the narrow layout
+   isn't a nicety here — it's the layout the capture flow actually runs in.
+   =========================================================================== */
+.shell { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+.side {
+  background: var(--panel); border-right: 1px solid var(--border);
+  padding: 1.2rem; display: flex; flex-direction: column;
+}
+.side-brand { margin-bottom: 1.5rem; }
+.side-name { font-weight: 800; font-size: 1.15rem; margin-bottom: .35rem; }
+.side-nav { display: flex; flex-direction: column; gap: .35rem; }
+.side-link { justify-content: flex-start; }
+.side-foot { margin-top: auto; font-size: .8rem; color: var(--muted); }
+.side-user { margin-bottom: .5rem; overflow-wrap: anywhere; }
+.side-signout { width: 100%; justify-content: center; }
+.main { padding: 2rem; max-width: 1200px; }
+
+@media (max-width: 820px) {
+  .shell { grid-template-columns: 1fr; }
+  .side {
+    border-right: 0; border-bottom: 1px solid var(--border);
+    padding: .8rem 1rem;
+    position: sticky; top: 0; z-index: 40;
+  }
+  .side-brand { display: flex; align-items: center; gap: .6rem; margin-bottom: .7rem; }
+  .side-name { margin: 0; }
+  .side-nav { flex-direction: row; flex-wrap: wrap; gap: .4rem; }
+  .side-link { padding: .45rem .7rem; }
+  .side-foot { margin-top: .7rem; display: flex; align-items: center; gap: .8rem; }
+  .side-user { margin: 0; flex: 1; }
+  .side-signout { width: auto; }
+  .main { padding: 1rem; }
+}
+
+/* --- Page headings --------------------------------------------------------- */
+.page-head {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: .8rem; flex-wrap: wrap; margin-bottom: 1.2rem;
+}
+.page-title { font-size: 1.6rem; font-weight: 800; }
+.page-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.empty-state { text-align: center; color: var(--muted); padding: 3rem 1rem; }
+
+/* ===========================================================================
+   SEARCH + FILTERS
+   =========================================================================== */
+.filters { margin-bottom: 1.1rem; }
+.filters-row { display: flex; gap: .5rem; align-items: center; margin-bottom: .7rem; }
+.search-wrap { position: relative; flex: 1; }
+.search-icon {
+  position: absolute; left: .65rem; top: 50%; transform: translateY(-50%);
+  color: var(--muted); font-size: 1.05rem; pointer-events: none;
+}
+.search-input { padding-left: 2rem; padding-right: 2rem; }
+/* Safari draws its own clear button on type=search, on top of ours. */
+.search-input::-webkit-search-cancel-button { display: none; }
+.search-clear {
+  position: absolute; right: .4rem; top: 50%; transform: translateY(-50%);
+  background: none; border: 0; color: var(--muted); cursor: pointer;
+  font-size: .85rem; padding: .25rem .4rem; border-radius: var(--radius);
+}
+.search-clear:hover { color: var(--text); background: var(--panel-2); }
+
+.chip-rows { display: flex; flex-direction: column; gap: .4rem; }
+.chip-row { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.chip-label {
+  font-size: .66rem; color: var(--muted); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+  width: 72px; flex-shrink: 0;
+}
+.chip-set { display: flex; gap: .3rem; flex-wrap: wrap; }
+.chip {
+  font-size: .74rem; padding: .26rem .6rem; border-radius: var(--radius);
+  background: transparent; border: 1px solid var(--border);
+  color: var(--muted); cursor: pointer; font-weight: 600;
+  transition: border-color .12s, color .12s, background .12s;
+}
+.chip:hover { border-color: var(--border-2); color: var(--text); }
+.chip.is-on { border-color: var(--brand); color: var(--brand); background: rgb(34 211 238 / .08); }
+.filters-count { font-size: .78rem; color: var(--muted); margin-top: .6rem; }
+
+@media (max-width: 620px) {
+  .chip-label { width: auto; }
+  .chip-row { gap: .35rem; }
+}
+
+/* --- Quote list ------------------------------------------------------------ */
+.table-card { padding: 0; overflow: hidden; }
+.list { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.list thead tr { text-align: left; color: var(--muted); font-size: .72rem; }
+.list th { padding: .8rem .6rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.list th:first-child, .list td:first-child { padding-left: 1rem; }
+.list th:last-child,  .list td:last-child  { padding-right: 1rem; }
+.list tbody tr { border-top: 1px solid var(--border); }
+.list td { padding: .7rem .6rem; vertical-align: middle; }
+.list .right { text-align: right; }
+.list .total { font-weight: 700; white-space: nowrap; }
+.quote-no { color: var(--brand); font-weight: 700; font-family: var(--font-mono), monospace; }
+.muted-dash { color: var(--muted); }
+.rego {
+  display: inline-block; font-family: var(--font-mono), monospace;
+  font-weight: 700; letter-spacing: .06em; margin-right: .5rem;
+}
+.vehicle-desc { color: var(--muted); font-size: .84rem; }
+.tp-pill { margin-left: .45rem; color: var(--brand); border-color: var(--brand); }
+
+@media (max-width: 820px) {
+  /* Below tablet the table stops being a table: each quote becomes a card,
+     because five columns on a phone means five unreadable columns. */
+  .list, .list tbody, .list tr, .list td { display: block; width: 100%; }
+  .list thead { display: none; }
+  .list tbody tr { padding: .8rem 1rem; }
+  .list td { padding: .12rem 0; }
+  .list td:first-child, .list td:last-child { padding-left: 0; padding-right: 0; }
+  .list .right { text-align: left; }
+  .list .total { font-size: 1.05rem; margin-top: .3rem; }
+}
+
+/* ===========================================================================
+   FAULT / LIABILITY CARD
+   =========================================================================== */
+.fault-card { margin-bottom: 1rem; }
+.fault-main { display: flex; gap: 1.4rem; align-items: flex-start; flex-wrap: wrap; }
+.fault-set { display: flex; gap: .35rem; flex-wrap: wrap; }
+.fault-set .chip { padding: .38rem .8rem; font-size: .82rem; }
+.tp-toggle {
+  display: flex; gap: .55rem; align-items: flex-start; cursor: pointer;
+  padding: .5rem .7rem; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--panel-2); max-width: 340px;
+}
+.tp-toggle input { margin-top: .2rem; accent-color: var(--brand); }
+.tp-toggle strong { display: block; font-size: .84rem; }
+.tp-hint { display: block; font-size: .74rem; color: var(--muted); margin-top: .1rem; }
+.fault-hint { font-size: .8rem; color: var(--muted); margin-top: .7rem; }
+.fault-warn { font-size: .8rem; color: var(--warn); margin-top: .4rem; }
+
+/* ===========================================================================
+   CAPTURE FLOW — big targets, because this is used with dirty hands on a phone
+   =========================================================================== */
+.capture { max-width: 780px; }
+.capture-head { display: flex; align-items: center; gap: .8rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.capture-h { font-size: .72rem; color: var(--muted); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em; margin: 1.4rem 0 .6rem; }
+.capture-note { color: var(--muted); font-size: .88rem; margin-bottom: .8rem; }
+.capture-error { color: var(--bad); font-size: .85rem; margin: .6rem 0; }
+.capture-search { font-size: 1.05rem; padding: .7rem .8rem; margin-bottom: .4rem; }
+
+.rego-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: .6rem;
+}
+.rego-card {
+  display: flex; flex-direction: column; gap: .18rem; text-align: left;
+  padding: .8rem .9rem; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text);
+  transition: border-color .12s, background .12s;
+}
+.rego-card:hover { border-color: var(--brand); background: var(--panel-2); }
+.rego-plate {
+  font-family: var(--font-mono), monospace; font-weight: 800;
+  font-size: 1.15rem; letter-spacing: .09em;
+}
+.rego-desc { font-size: .86rem; }
+.rego-meta { font-size: .74rem; color: var(--muted); }
+
+.vehicle-bar {
+  display: flex; align-items: center; gap: .8rem; flex-wrap: wrap;
+  padding: .7rem .9rem; margin-bottom: 1rem;
+  background: var(--panel-2); border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+}
+.vehicle-bar .rego-plate { font-size: 1.05rem; }
+.vehicle-bar-desc { font-size: .86rem; color: var(--muted); }
+.vehicle-bar-job {
+  margin-left: auto; display: flex; align-items: center; gap: .4rem;
+  font-family: var(--font-mono), monospace; font-weight: 700; color: var(--brand);
+}
+.vehicle-bar-change { font-size: .74rem; padding: .15rem .4rem; }
+
+.job-list { display: flex; flex-direction: column; gap: .5rem; }
+.job-card {
+  display: flex; align-items: baseline; gap: .8rem; text-align: left;
+  padding: .8rem .9rem; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text);
+}
+.job-card:hover { border-color: var(--brand); }
+.job-no { font-family: var(--font-mono), monospace; font-weight: 800; color: var(--brand); }
+.job-meta { font-size: .8rem; color: var(--muted); }
+
+.seg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .6rem; }
+.seg-card {
+  display: flex; flex-direction: column; gap: .2rem; text-align: left;
+  padding: .9rem; cursor: pointer; min-height: 84px;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text);
+}
+.seg-card:hover { border-color: var(--brand); background: var(--panel-2); }
+.seg-name { font-weight: 700; font-size: .95rem; }
+.seg-hint { font-size: .76rem; color: var(--muted); }
+
+.capture-type { display: flex; align-items: center; gap: .6rem; margin-bottom: 1rem; }
+.capture-type-label {
+  font-size: .68rem; color: var(--muted); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+}
+.capture-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+/* The one control this whole screen exists for. Sized so it can be hit
+   without looking at the phone. */
+.capture-btn {
+  flex: 1 1 200px; display: inline-flex; align-items: center; justify-content: center;
+  gap: .55rem; padding: 1.15rem 1rem; font-size: 1rem; font-weight: 700;
+  background: var(--brand); color: var(--brand-ink);
+  border: 1px solid transparent; border-radius: var(--radius); cursor: pointer;
+}
+.capture-btn:hover { background: var(--brand-2); }
+.capture-btn:last-of-type { background: var(--panel-2); color: var(--text); border-color: var(--border-2); }
+.capture-btn:last-of-type:hover { border-color: var(--brand); }
+.capture-btn:disabled { opacity: .45; cursor: not-allowed; }
+.capture-foot { display: flex; gap: .6rem; margin-top: 1.6rem; flex-wrap: wrap; }
+
+.shot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .7rem; align-items: start; }
+.shot { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--panel-2); }
+.shot-img { position: relative; display: block; }
+.shot-img img { width: 100%; height: auto; display: block; }
+.shot-pdf { height: 110px; display: grid; place-items: center; color: var(--muted); font-size: .8rem; }
+.shot-cap { display: flex; justify-content: space-between; align-items: center; padding: .35rem .45rem; gap: .3rem; }
+.shot-mark { font-size: .72rem; padding: .15rem .35rem; }
+
+/* ===========================================================================
+   PHOTO SEGMENTS ON THE QUOTE
+   =========================================================================== */
+.photos-card { margin-top: 1.5rem; }
+.photos-head { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-bottom: .4rem; }
+.photos-title { font-weight: 700; }
+
+.photo-seg { border-top: 1px solid var(--border); padding: 1rem 0; }
+.photo-seg:first-of-type { border-top: 0; }
+.photo-seg-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .8rem; flex-wrap: wrap; margin-bottom: .7rem; }
+.photo-seg-name { font-weight: 700; font-size: .95rem; display: flex; align-items: center; gap: .45rem; }
+.photo-seg-n {
+  font-family: var(--font-mono), monospace; font-size: .7rem; font-weight: 700;
+  color: var(--brand-ink); background: var(--brand);
+  padding: .05rem .35rem; border-radius: 99px;
+}
+.photo-seg-hint { font-size: .76rem; color: var(--muted); margin-top: .1rem; }
+.photo-seg-actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+.photo-seg-actions .btn { font-size: .76rem; padding: .35rem .6rem; }
+.photo-seg-empty { font-size: .8rem; color: var(--muted); font-style: italic; }
+
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .7rem; align-items: start; }
+.photo-tile { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--panel-2); }
+.photo-thumb {
+  position: relative; display: block; width: 100%; padding: 0;
+  border: 0; background: #0b1018; cursor: pointer;
+}
+.photo-thumb img { width: 100%; height: auto; display: block; }
+.photo-pdf { height: 120px; display: grid; place-items: center; color: var(--muted); font-size: .8rem; text-decoration: none; }
+.photo-marks {
+  position: absolute; top: .35rem; right: .35rem;
+  font-size: .68rem; font-weight: 700; padding: .1rem .35rem;
+  background: rgb(6 10 18 / .82); color: var(--bad);
+  border: 1px solid var(--bad); border-radius: var(--radius);
+}
+.photo-cap { display: flex; align-items: center; gap: .25rem; padding: .35rem .4rem; flex-wrap: wrap; }
+.photo-act { font-size: .7rem; padding: .15rem .3rem; white-space: nowrap; }
+.photo-move { font-size: .68rem; padding: .18rem .25rem; flex: 1; min-width: 90px; }
+.photo-del { padding: .15rem .3rem; color: var(--bad); }
+
+/* ===========================================================================
+   DAMAGE MARKS
+   The overlay covers exactly the image box, so a mark stored at (0.4, 0.6)
+   sits on the same pixel of the car at every size it's shown at.
+   =========================================================================== */
+.anno-layer { position: absolute; inset: 0; pointer-events: none; }
+.anno-layer svg { display: block; }
+
+.anno-backdrop {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgb(3 6 12 / .88);
+  display: grid; place-items: center; padding: 1rem;
+  overscroll-behavior: contain;
+}
+.anno-modal, .lightbox {
+  background: var(--panel); border: 1px solid var(--border-2);
+  border-radius: var(--radius); width: min(960px, 100%);
+  max-height: 94vh; overflow-y: auto; padding: .9rem;
+}
+.anno-head { display: flex; justify-content: space-between; align-items: center; gap: .8rem; margin-bottom: .7rem; flex-wrap: wrap; }
+.anno-hint { display: block; font-size: .76rem; color: var(--muted); margin-top: .1rem; }
+
+.anno-stage { display: grid; place-items: center; background: #05080e; border-radius: var(--radius); padding: .5rem; }
+/* inline-block so the frame shrink-wraps the image: the overlay has to be the
+   image's box, not the container's, or every mark lands in the letterbox. */
+.anno-frame { position: relative; display: inline-block; line-height: 0; touch-action: none; max-width: 100%; }
+.anno-img { display: block; max-width: 100%; max-height: 62vh; width: auto; height: auto; user-select: none; }
+.anno-svg { position: absolute; top: 0; left: 0; pointer-events: none; }
+
+.anno-tools { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; margin-top: .7rem; }
+.anno-group { display: flex; gap: .3rem; align-items: center; flex-wrap: wrap; }
+.anno-tool {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .4rem .65rem; font-size: .78rem; font-weight: 600; cursor: pointer;
+  background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--muted);
+}
+.anno-tool:hover { color: var(--text); border-color: var(--border-2); }
+.anno-tool.is-on { border-color: var(--brand); color: var(--brand); background: rgb(34 211 238 / .1); }
+.anno-icon { font-size: .95rem; }
+.anno-swatch {
+  width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
+  border: 2px solid var(--border-2);
+}
+.anno-swatch.is-on { border-color: var(--text); box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--text); }
+
+.anno-label-bar { display: flex; gap: .5rem; align-items: center; margin-top: .7rem; flex-wrap: wrap; }
+.anno-label-bar .input { flex: 1; min-width: 200px; }
+.anno-quick { display: flex; gap: .3rem; flex-wrap: wrap; margin-top: .5rem; }
+.anno-chip {
+  font-size: .72rem; padding: .22rem .5rem; cursor: pointer;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--muted);
+}
+.anno-chip:hover { border-color: var(--brand); color: var(--brand); }
+.anno-empty { font-size: .8rem; color: var(--muted); margin-top: .7rem; }
+.anno-error { color: var(--bad); font-size: .82rem; margin-top: .5rem; }
+.anno-foot { display: flex; justify-content: space-between; align-items: center; gap: .8rem; margin-top: .9rem; flex-wrap: wrap; }
+.anno-count { font-size: .78rem; color: var(--muted); }
+
+.lightbox-frame { position: relative; display: inline-block; line-height: 0; max-width: 100%; }
+.lightbox-frame img { display: block; max-width: 100%; max-height: 78vh; width: auto; height: auto; }
+.lightbox { display: grid; place-items: center; }
+.lightbox .anno-head { width: 100%; }
+
+/* --- Both sides of one accident ------------------------------------------- */
+.tp-link, .tp-caused { margin-top: .9rem; }
+.link-row {
+  display: flex; align-items: center; gap: .55rem; flex-wrap: wrap;
+  padding: .45rem .6rem; margin-top: .3rem;
+  background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.link-desc { font-size: .84rem; color: var(--muted); }
+.link-clear { margin-left: auto; font-size: .74rem; padding: .15rem .4rem; }
+.link-picker { position: relative; max-width: 480px; }
+.link-picked { max-width: 560px; }
+.link-list { max-height: 280px; }
+.link-option { display: flex; align-items: baseline; gap: .55rem; }
+.link-no { font-family: var(--font-mono), monospace; font-weight: 700; color: var(--brand); }
+.link-option.is-active .link-no { color: var(--brand-ink); }
+.link-fault { font-size: .72rem; font-weight: 700; margin-left: auto; }
+.link-note { color: var(--muted); font-style: italic; cursor: default; }
+.from-link {
+  display: block; font-size: .74rem; color: var(--muted);
+  margin-top: .15rem; text-decoration: none;
+}
+.from-link:hover { color: var(--brand); }
+
+/* ===========================================================================
+   DAMAGE MAP — the car plan and its panel inspector
+   =========================================================================== */
+.car-card { margin-bottom: 1rem; }
+.car-head {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: .8rem; flex-wrap: wrap; margin-bottom: .8rem;
+}
+.car-title { font-weight: 700; }
+.car-body { display: grid; grid-template-columns: 1fr 300px; gap: 1rem; }
+.car-stage { min-width: 0; }
+/* A fixed height, not an aspect ratio: the canvas has to be tall enough to
+   turn the car over in, and a wide screen shouldn't make it a letterbox. */
+.car3d {
+  width: 100%; height: 340px;
+  background: linear-gradient(180deg, #0c111c 0%, #070a12 100%);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  overflow: hidden; touch-action: none;
+}
+.car3d canvas { display: block; }
+.car3d-loading { display: grid; place-items: center; color: var(--muted); font-size: .85rem; }
+/* Flat top-down plan standing in for the 3D car. Front at the top; the flank
+   columns are narrow because the body sides are sills and pillars, not skins. */
+.plan-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: .45fr 1fr 1.4fr 1fr .45fr;
+  grid-auto-rows: minmax(42px, auto);
+  gap: 4px;
+  max-width: 440px; margin: 0 auto;
+  padding: 1.4rem .6rem;
+  background: linear-gradient(180deg, #0c111c 0%, #070a12 100%);
+  border: 1px solid var(--border); border-radius: var(--radius);
+}
+.plan-cell {
+  display: grid; place-items: center; text-align: center;
+  padding: .3rem .2rem; min-width: 0;
+  font-size: .64rem; font-weight: 700; letter-spacing: .04em;
+  color: var(--muted); background: var(--panel-2);
+  border: 1px solid var(--border); border-radius: 6px;
+  cursor: pointer; overflow-wrap: anywhere;
+}
+.plan-cell:hover { border-color: var(--brand); color: var(--text); }
+.plan-cell.is-sel { outline: 2px solid var(--brand); outline-offset: 1px; color: var(--text); }
+.plan-dir {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+}
+.plan-dir-front { top: .25rem; }
+.plan-dir-rear { bottom: .25rem; }
+.plan-more { margin-top: .6rem; display: flex; flex-direction: column; gap: .5rem; }
+.plan-toggle { align-self: flex-start; font-size: .76rem; }
+.plan-group { display: flex; flex-direction: column; gap: .3rem; }
+.plan-chips { display: flex; flex-wrap: wrap; gap: .3rem; }
+.plan-chip { font-size: .7rem; }
+.plan-note, .panel-note { font-size: .76rem; color: var(--muted); }
+.car-help { font-size: .74rem; color: var(--muted); margin-top: .4rem; text-align: center; }
+
+.car-side { display: flex; flex-direction: column; gap: .6rem; min-width: 0; }
+.car-legend { display: flex; flex-wrap: wrap; gap: .5rem; }
+.legend-item { display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; color: var(--muted); }
+.legend-dot { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
+.panel-title { display: flex; flex-direction: column; gap: .35rem; }
+.panel-ops { display: flex; gap: .25rem; flex-wrap: wrap; }
+.panel-op {
+  font-size: .64rem; padding: .1rem .35rem; border-radius: var(--radius);
+  border: 1px solid currentColor; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.panel-empty { font-size: .8rem; color: var(--muted); font-style: italic; }
+.panel-lines { list-style: none; display: flex; flex-direction: column; gap: .2rem; }
+.panel-lines li {
+  display: grid; grid-template-columns: 52px 1fr auto; gap: .4rem;
+  align-items: baseline; font-size: .78rem;
+  padding: .25rem .35rem; background: var(--panel-2);
+  border-radius: var(--radius);
+}
+.panel-line-sec { font-size: .62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 700; }
+.panel-line-desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.panel-line-amt { font-family: var(--font-mono), monospace; font-weight: 600; }
+.panel-adds { display: flex; flex-wrap: wrap; gap: .3rem; }
+.panel-add { font-size: .72rem; padding: .3rem .5rem; }
+.panel-clear { align-self: flex-start; font-size: .74rem; }
+
+@media (max-width: 900px) {
+  .car-body { grid-template-columns: 1fr; }
+  .car3d { height: 280px; }
+}
+
+/* ===========================================================================
+   ESTIMATE SECTIONS — R&R, Repair, Paint, Parts, Sublets, Other
+   =========================================================================== */
+.sections { display: flex; flex-direction: column; gap: .8rem; }
+.sec {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.sec-head {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: .8rem; flex-wrap: wrap; padding: .7rem 1rem;
+  border-bottom: 1px solid var(--border); background: var(--panel-2);
+}
+.sec-id { display: flex; flex-direction: column; gap: .1rem; }
+.sec-name { font-weight: 700; font-size: .95rem; }
+.sec-hint { font-size: .72rem; color: var(--muted); }
+.sec-sum { display: flex; align-items: center; gap: .7rem; }
+.sec-hours { font-family: var(--font-mono), monospace; font-size: .78rem; color: var(--muted); }
+.sec-total { font-family: var(--font-mono), monospace; font-weight: 700; font-size: .95rem; }
+.sec-add { font-size: .76rem; padding: .35rem .6rem; white-space: nowrap; }
+.sec-empty { font-size: .8rem; color: var(--muted); font-style: italic; padding: .9rem 1rem; }
+
+.sec-scroll { overflow-x: auto; }
+.sec-table { width: 100%; border-collapse: collapse; font-size: .85rem; min-width: 720px; }
+.sec-table thead tr { color: var(--muted); font-size: .68rem; text-align: left; }
+.sec-table th {
+  padding: .5rem .35rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.sec-table th:first-child, .sec-table td:first-child { padding-left: 1rem; }
+.sec-table th:last-child,  .sec-table td:last-child  { padding-right: 1rem; }
+.sec-table tbody tr { border-top: 1px solid var(--border); }
+.sec-table td { padding: .35rem .3rem; vertical-align: top; }
+/* The row for the panel selected on the diagram, so clicking a guard shows
+   which lines belong to it without scrolling to find them. */
+.sec-table tbody tr.is-focus { background: rgb(34 211 238 / .07); }
+.sec-table .c-desc { min-width: 220px; }
+.sec-table .c-area { width: 130px; }
+.sec-table .c-partno { width: 110px; }
+.sec-table .c-source { width: 110px; }
+.sec-table .c-num { width: 88px; }
+.sec-table .c-amt { width: 92px; text-align: right; font-weight: 700; white-space: nowrap; padding-top: .8rem; }
+.sec-table .c-act { width: 78px; white-space: nowrap; padding-top: .55rem; }
+.row-btn { padding: .15rem .3rem; }
+.row-del { color: var(--bad); }
+.sec-table .select, .sec-table .input { font-size: .8rem; }
+
+@media (max-width: 620px) {
+  .sec-head { padding: .6rem .7rem; }
+  .sec-sum { width: 100%; justify-content: space-between; }
+  .sec-table th:first-child, .sec-table td:first-child { padding-left: .7rem; }
+}
+
+/* ===========================================================================
+   QUOTE PAGE LAYOUT
+   =========================================================================== */
+.quote-head {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: .8rem; flex-wrap: wrap; margin-bottom: 1.2rem;
+}
+.quote-actions { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+.quote-top { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.quote-foot {
+  display: grid; grid-template-columns: 1fr 320px; gap: 1rem;
+  align-items: start; margin-top: 1rem;
+}
+.quote-notes textarea { resize: vertical; }
+@media (max-width: 900px) {
+  .quote-top, .quote-foot { grid-template-columns: 1fr; }
+}
+
+.capture-new { align-self: flex-start; margin: .2rem 0 .8rem; }

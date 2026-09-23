@@ -9,10 +9,30 @@ Next.js 16 (App Router) · Supabase Postgres (Auth + Row-Level Security) · Tail
   (tenant). Every table is isolated by Row-Level Security: you only ever see
   your own shop's data.
 - **Quote builder** — the core screen. Vehicle + customer + claim details, then
-  mixed line items (Part / Paint & materials / Labour / Sublet / Misc) with
-  per-line source (new/used/aftermarket/recycled), live subtotal + GST + total.
+  the six estimate sections (R&R / Repair / Paint / Parts / Sublets / Other),
+  each searching its own Crashzone pick-list group and carrying only the
+  columns it needs. Live subtotal + GST + total, printed and internal notes,
+  valid-until date, and a warning before leaving with unsaved changes.
+- **Damage map** — a top-down plan of the car (sedan / hatch / SUV). Tap a panel
+  to see and add the work on it; panels colour themselves from the line items
+  (replace / repair / paint / R&R). The full detail catalogue (bumper
+  internals, glass, ADAS) sits underneath. The 3D diagram
+  (`components/CarDiagram.jsx`) is parked for now — `PanelBoard` takes the same
+  props, so switching back is a one-line change in `CarPanel.jsx`.
+- **Fault & third parties** — liability (in favour / against / disputed) kept
+  apart from status, excess warnings, third-party jobs linked back to the
+  at-fault quote in both directions.
+- **Quote list** — search by rego, VIN, make/model, customer, claim or quote
+  number; filter by fault, party and status.
+- **Photos** — per repair stage (damage → after repair, plus invoices), damage
+  marks drawn over photos as vector data, move between stages, lightbox.
+- **Shop-floor capture** (`/capture`) — pick the car by rego, the job, the
+  stage, shoot. Can start a new quote for a known car or a brand-new plate on
+  the spot.
 - **Printable quote** — clean A4 view at `/print/<id>`, "Save as PDF" via the
-  browser. Carries shop letterhead, vehicle, customer, claim, lines, GST, terms.
+  browser. Letterhead, vehicle, customer, claim, lines by section with panel,
+  subtotals, GST, notes, terms; status watermark; becomes a tax invoice when
+  the quote is marked invoiced.
 - **Settings** — shop details + default labour/paint rates + quote terms.
 
 ## Setup
@@ -21,6 +41,9 @@ Next.js 16 (App Router) · Supabase Postgres (Auth + Row-Level Security) · Tail
 2. **Run the schema** — in the Supabase SQL editor, run in order:
    - `db/001_init.sql`
    - `db/002_rls.sql`
+   - `db/003_photos.sql`
+   - `db/004_liability_photos.sql`
+   - `db/005_sections_and_panels.sql`
 3. **Auth setting** — for testing, Supabase → Authentication → Providers → Email
    → turn *off* "Confirm email" so sign-up logs you straight in.
 4. **Env** — copy `.env.local.example` to `.env.local` and fill from

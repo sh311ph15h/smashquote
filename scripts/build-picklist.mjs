@@ -43,9 +43,12 @@ export const PICK_AREAS = new Map(${JSON.stringify(areaList)});
 
 export const PICK_LIST = ${JSON.stringify(byType)};
 
-// Quote line types map onto the pick-list groups that make sense for them.
+// The six quote sections are the six pick-list groups, one to one — see
+// SECTIONS in lib/lineTypes.js. Kept as an explicit map rather than assumed,
+// so a section that ever needs a different list has somewhere to say so.
 export const PICK_FOR_LINE = {
-  labour: 'rr',
+  rr: 'rr',
+  repair: 'repair',
   paint: 'paint',
   part: 'part',
   sublet: 'sublet',
@@ -71,7 +74,13 @@ export function searchPickList(group, query, limit = 40) {
     .filter(([s]) => s >= 0)
     .sort((a, b) => a[0] - b[0] || a[1][1].localeCompare(b[1][1]))
     .slice(0, limit)
-    .map(([, r]) => ({ code: r[0], description: r[1], area: PICK_AREAS.get(r[2]) || '', hours: r[3] }));
+    .map(([, r]) => ({
+      code: r[0],
+      description: r[1],
+      areaId: r[2] || null,
+      area: PICK_AREAS.get(r[2]) || '',
+      hours: r[3],
+    }));
 }
 `;
 writeFileSync('lib/picklist.js', out);

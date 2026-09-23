@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentShop } from '@/lib/shop';
 import { isR2Configured, presignUpload, presignDownload, deleteObject } from '@/lib/r2';
+import { isValidCategory } from '@/lib/photos';
+import { normaliseMarks } from '@/lib/annotations';
 import { revalidatePath } from 'next/cache';
 
 const MAX_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -44,7 +46,9 @@ export async function confirmPhoto(quoteId, meta) {
       shop_id: shop.id,
       quote_id: quoteId,
       r2_key: meta.key,
-      category: meta.category || 'damage',
+      // The stage is chosen at capture time. An unknown one means a stale tab
+      // or a hand-built call, and would fail the CHECK constraint anyway.
+      category: isValidCategory(meta.category) ? meta.category : 'damage',
       caption: meta.caption || null,
       content_type: meta.contentType || null,
       size_bytes: meta.sizeBytes || null,
@@ -56,7 +60,51 @@ export async function confirmPhoto(quoteId, meta) {
 
   const url = await presignDownload(data.r2_key);
   revalidatePath(`/quotes/${quoteId}`);
+  revalidatePath('/');
   return { photo: { ...data, url } };
+}
+
+// Damage marks drawn over a photo. Stored as vector data beside the image, so
+// the original file is never rewritten — the photo stays the evidence it was
+// when it was taken, and a mark can be corrected or removed later.
+//
+// The marks are re-parsed server-side rather than trusted: this lands in a
+// jsonb column that the viewer, the print sheet and any future export all read
+// back out, so only shapes we know how to draw are allowed in.
+export async function saveAnnotations(photoId, marks) {
+  const supabase = await createClient();
+  const clean = normaliseMarks(marks);
+
+  const { data, error } = await supabase
+    .from('quote_photos')
+    .update({ annotations: clean.length ? clean : null })
+    .eq('id', photoId)
+    .select('id, quote_id, annotations')
+    .maybeSingle();
+  if (error) return { error: error.message };
+  if (!data) return { error: 'Photo not found.' };
+
+  revalidatePath(`/quotes/${data.quote_id}`);
+  return { annotations: data.annotations };
+}
+
+// Move a photo into a different stage — the wrong segment gets picked in a
+// hurry on the floor more often than anyone would like.
+export async function updatePhotoCategory(photoId, category) {
+  if (!isValidCategory(category)) return { error: 'Unknown photo type.' };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('quote_photos')
+    .update({ category })
+    .eq('id', photoId)
+    .select('id, quote_id, category')
+    .maybeSingle();
+  if (error) return { error: error.message };
+  if (!data) return { error: 'Photo not found.' };
+
+  revalidatePath(`/quotes/${data.quote_id}`);
+  return { category: data.category };
 }
 
 export async function deletePhoto(photoId) {

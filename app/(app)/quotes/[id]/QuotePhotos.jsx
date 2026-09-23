@@ -1,94 +1,183 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { createUploadUrl, confirmPhoto, deletePhoto } from '@/app/actions/photos';
+import { useState } from 'react';
+import { deletePhoto, saveAnnotations, updatePhotoCategory } from '@/app/actions/photos';
+import { PHOTO_SEGMENTS, groupBySegment, segmentLabel } from '@/lib/photos';
+import { markCount } from '@/lib/annotations';
+import { useUpload, CaptureButtons } from '@/components/PhotoUpload';
+import { AnnotationLayer } from '@/components/Annotations';
+import PhotoAnnotator from '@/components/PhotoAnnotator';
 
-const CATEGORIES = ['damage', 'before', 'after', 'invoice', 'other'];
-
+// ---------------------------------------------------------------------------
+// The photo record for a job, split by repair stage.
+//
+// One flat gallery stops being readable the moment a job runs past a week — a
+// damage shot and a finished shot of the same panel look alike in a grid. Each
+// stage gets its own segment so the set reads as a sequence, and a stage that
+// was never photographed is visibly empty rather than just absent.
+// ---------------------------------------------------------------------------
 export default function QuotePhotos({ quoteId, initialPhotos, configured }) {
   const [photos, setPhotos] = useState(initialPhotos || []);
-  const [category, setCategory] = useState('damage');
-  const [uploading, setUploading] = useState(0);
-  const [error, setError] = useState('');
-  const fileRef = useRef(null);
+  const [editing, setEditing] = useState(null);
+  const [viewing, setViewing] = useState(null);
+  const { upload, uploading, error, setError } = useUpload(quoteId);
 
-  async function handleFiles(fileList) {
-    setError('');
-    for (const file of Array.from(fileList)) {
-      setUploading((u) => u + 1);
-      try {
-        const res = await createUploadUrl(quoteId, file.name, file.type, file.size);
-        if (res.error) { setError(res.error); continue; }
-        const put = await fetch(res.url, {
-          method: 'PUT', body: file, headers: { 'Content-Type': file.type },
-        });
-        if (!put.ok) { setError(`Upload failed for ${file.name}.`); continue; }
-        const conf = await confirmPhoto(quoteId, {
-          key: res.key, contentType: file.type, sizeBytes: file.size, category,
-        });
-        if (conf.error) { setError(conf.error); continue; }
-        setPhotos((p) => [...p, conf.photo]);
-      } finally {
-        setUploading((u) => u - 1);
-      }
-    }
-    if (fileRef.current) fileRef.current.value = '';
+  const segments = groupBySegment(photos);
+  const total = photos.length;
+
+  // The stage is decided by *which* segment you added from, so nobody has to
+  // remember to change a dropdown before shooting.
+  async function addTo(segment, files) {
+    const added = await upload(files, segment);
+    if (added.length) setPhotos(p => [...p, ...added]);
   }
 
   async function handleDelete(id) {
-    if (!confirm('Delete this photo?')) return;
+    if (!confirm('Delete this photo? This removes the file and any damage marks on it.')) return;
     const res = await deletePhoto(id);
     if (res.error) setError(res.error);
-    else setPhotos((p) => p.filter((x) => x.id !== id));
+    else setPhotos(p => p.filter(x => x.id !== id));
+  }
+
+  async function moveTo(id, category) {
+    const res = await updatePhotoCategory(id, category);
+    if (res.error) { setError(res.error); return; }
+    setPhotos(p => p.map(x => (x.id === id ? { ...x, category: res.category } : x)));
+  }
+
+  if (!configured) {
+    return (
+      <div className="card photos-card">
+        <h3 className="photos-title">Photos</h3>
+        <p className="capture-note">
+          Photo storage isn&apos;t connected yet. Add your Cloudflare R2 keys to{' '}
+          <code>.env.local</code> and this turns on automatically.
+        </p>
+      </div>
+    );
   }
 
   return (
-    <div className="card" style={{ marginTop: '1.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '.6rem' }}>
-        <h3 style={{ fontWeight: 700 }}>Photos {photos.length ? `(${photos.length})` : ''}</h3>
-        {configured && (
-          <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
-            <select className="select" style={{ width: 'auto' }} value={category} onChange={(e) => setCategory(e.target.value)}>
-              {CATEGORIES.map((c) => <option key={c} value={c}>{c[0].toUpperCase() + c.slice(1)}</option>)}
-            </select>
-            <button className="btn" onClick={() => fileRef.current?.click()} disabled={uploading > 0}>
-              {uploading > 0 ? `Uploading… (${uploading})` : '+ Add photos'}
-            </button>
-            <input ref={fileRef} type="file" hidden multiple accept="image/*,application/pdf"
-              onChange={(e) => handleFiles(e.target.files)} />
-          </div>
-        )}
+    <div className="card photos-card">
+      <div className="photos-head">
+        <h3 className="photos-title">Photos {total ? `(${total})` : ''}</h3>
+        {uploading > 0 && <span className="capture-note">Uploading {uploading}…</span>}
       </div>
 
-      {!configured && (
-        <p style={{ color: 'var(--muted)', fontSize: '.9rem' }}>
-          Photo storage isn&apos;t connected yet. Add your Cloudflare R2 keys to <code>.env.local</code> and this turns on automatically.
-        </p>
-      )}
+      {error && <p className="capture-error">{error}</p>}
 
-      {error && <p style={{ color: 'var(--bad)', fontSize: '.85rem', marginBottom: '.8rem' }}>{error}</p>}
-
-      {configured && photos.length === 0 && uploading === 0 && (
-        <p style={{ color: 'var(--muted)', fontSize: '.9rem' }}>No photos yet — add damage shots, before/after, or invoice scans.</p>
-      )}
-
-      {photos.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '.8rem' }}>
-          {photos.map((p) => (
-            <div key={p.id} style={{ position: 'relative', border: '1px solid var(--border)', borderRadius: '.6rem', overflow: 'hidden', background: 'var(--panel-2)' }}>
-              <a href={p.url} target="_blank" rel="noreferrer">
-                {p.content_type === 'application/pdf'
-                  ? <div style={{ height: 120, display: 'grid', placeItems: 'center', color: 'var(--muted)', fontSize: '.8rem' }}>📄 PDF</div>
-                  : <img src={p.url} alt={p.caption || p.category} style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} />}
-              </a>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '.35rem .5rem' }}>
-                <span className="pill">{p.category}</span>
-                <button className="btn ghost" style={{ padding: '.15rem .3rem', color: 'var(--bad)' }} onClick={() => handleDelete(p.id)}>✕</button>
-              </div>
+      {segments.map(seg => (
+        <section key={seg.key} className="photo-seg">
+          <div className="photo-seg-head">
+            <div>
+              <h4 className="photo-seg-name">
+                {seg.label}
+                {seg.photos.length > 0 && <span className="photo-seg-n">{seg.photos.length}</span>}
+              </h4>
+              <p className="photo-seg-hint">{seg.hint}</p>
             </div>
-          ))}
-        </div>
+            <div className="photo-seg-actions">
+              <CaptureButtons
+                onFiles={files => addTo(seg.key, files)}
+                disabled={uploading > 0}
+              />
+            </div>
+          </div>
+
+          {seg.photos.length === 0 ? (
+            <p className="photo-seg-empty">Nothing here yet.</p>
+          ) : (
+            <div className="photo-grid">
+              {seg.photos.map(p => (
+                <Tile
+                  key={p.id}
+                  photo={p}
+                  onView={() => setViewing(p)}
+                  onMark={() => setEditing(p)}
+                  onDelete={() => handleDelete(p.id)}
+                  onMove={cat => moveTo(p.id, cat)}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      ))}
+
+      {viewing && (
+        <Lightbox photo={viewing} onClose={() => setViewing(null)} onMark={() => { setEditing(viewing); setViewing(null); }} />
       )}
+
+      {editing && (
+        <PhotoAnnotator
+          photo={editing}
+          onClose={() => setEditing(null)}
+          onSave={async (marks) => {
+            const res = await saveAnnotations(editing.id, marks);
+            if (res.error) return res;
+            setPhotos(ps => ps.map(p => (p.id === editing.id ? { ...p, annotations: res.annotations } : p)));
+            return res;
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function Tile({ photo, onView, onMark, onDelete, onMove }) {
+  const isPdf = photo.content_type === 'application/pdf';
+  const marks = markCount(photo.annotations);
+
+  return (
+    <figure className="photo-tile">
+      {isPdf ? (
+        <a className="photo-thumb photo-pdf" href={photo.url} target="_blank" rel="noreferrer">📄 PDF</a>
+      ) : (
+        <button className="photo-thumb" onClick={onView} aria-label="View photo">
+          {/* object-fit: contain, not cover — a cropped thumbnail would put the
+              damage marks somewhere other than the damage. */}
+          <img src={photo.url} alt={photo.caption || segmentLabel(photo.category)} />
+          <AnnotationLayer marks={photo.annotations} minimal />
+          {marks > 0 && <span className="photo-marks" title={`${marks} damage marks`}>✎ {marks}</span>}
+        </button>
+      )}
+
+      <figcaption className="photo-cap">
+        {!isPdf && (
+          <button className="btn ghost photo-act" onClick={onMark}>
+            {marks ? 'Edit marks' : 'Mark damage'}
+          </button>
+        )}
+        <select
+          className="select photo-move"
+          value={photo.category}
+          onChange={e => onMove(e.target.value)}
+          aria-label="Change photo type"
+        >
+          {PHOTO_SEGMENTS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+        </select>
+        <button className="btn ghost photo-del" onClick={onDelete} aria-label="Delete photo">✕</button>
+      </figcaption>
+    </figure>
+  );
+}
+
+function Lightbox({ photo, onClose, onMark }) {
+  return (
+    <div className="anno-backdrop" onPointerDown={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="lightbox">
+        <header className="anno-head">
+          <strong>{segmentLabel(photo.category)}</strong>
+          <div style={{ display: 'flex', gap: '.5rem' }}>
+            <button className="btn secondary" onClick={onMark}>Mark damage</button>
+            <a className="btn ghost" href={photo.url} target="_blank" rel="noreferrer">Open original</a>
+            <button className="btn ghost" onClick={onClose} aria-label="Close">✕</button>
+          </div>
+        </header>
+        <div className="lightbox-frame">
+          <img src={photo.url} alt={photo.caption || segmentLabel(photo.category)} />
+          <AnnotationLayer marks={photo.annotations} />
+        </div>
+      </div>
     </div>
   );
 }

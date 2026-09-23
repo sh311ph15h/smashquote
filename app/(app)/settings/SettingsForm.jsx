@@ -2,14 +2,20 @@
 import { useActionState } from 'react';
 import { updateShop } from '@/app/actions/shop';
 
-export default function SettingsForm({ shop }) {
-  const [state, action, pending] = useActionState(updateShop, {});
-  const F = ({ name, label, def = '', type = 'text', full }) => (
+// Declared outside the form so it keeps its identity between renders —
+// defined inline, every keystroke elsewhere would remount the inputs.
+function F({ name, label, def = '', type = 'text', full }) {
+  return (
     <div style={{ gridColumn: full ? '1 / -1' : 'auto' }}>
       <label className="label">{label}</label>
-      <input className="input" name={name} type={type} defaultValue={def ?? ''} />
+      <input className="input" name={name} type={type} step={type === 'number' ? '0.01' : undefined}
+        defaultValue={def ?? ''} />
     </div>
   );
+}
+
+export default function SettingsForm({ shop }) {
+  const [state, action, pending] = useActionState(updateShop, {});
   return (
     <form action={action} className="card">
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.8rem' }}>
