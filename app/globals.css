@@ -262,14 +262,6 @@ input[inputmode="numeric"] {
 .fault-main { display: flex; gap: 1.4rem; align-items: flex-start; flex-wrap: wrap; }
 .fault-set { display: flex; gap: .35rem; flex-wrap: wrap; }
 .fault-set .chip { padding: .38rem .8rem; font-size: .82rem; }
-.tp-toggle {
-  display: flex; gap: .55rem; align-items: flex-start; cursor: pointer;
-  padding: .5rem .7rem; border: 1px solid var(--border); border-radius: var(--radius);
-  background: var(--panel-2); max-width: 340px;
-}
-.tp-toggle input { margin-top: .2rem; accent-color: var(--brand); }
-.tp-toggle strong { display: block; font-size: .84rem; }
-.tp-hint { display: block; font-size: .74rem; color: var(--muted); margin-top: .1rem; }
 .fault-hint { font-size: .8rem; color: var(--muted); margin-top: .7rem; }
 .fault-warn { font-size: .8rem; color: var(--warn); margin-top: .4rem; }
 

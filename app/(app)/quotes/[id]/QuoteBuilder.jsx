@@ -237,17 +237,28 @@ export default function QuoteBuilder({ shop, quote, initialLines, relatedQuote, 
             </div>
           </div>
 
-          <label className="tp-toggle">
-            <input
-              type="checkbox"
-              checked={header.is_third_party}
-              onChange={e => setH('is_third_party', e.target.checked)}
-            />
-            <span>
-              <strong>Third party&apos;s car</strong>
-              <span className="tp-hint">The other driver&apos;s vehicle, repaired at no cost to them.</span>
-            </span>
-          </label>
+          {/* Same chip style as fault on purpose: both are one-tap answers
+              about the job, and a lone checkbox read as a different kind of
+              control. */}
+          <div>
+            <span className="label">Whose car</span>
+            <div className="fault-set" role="group" aria-label="Whose car">
+              {[
+                { tp: false, label: 'Our customer' },
+                { tp: true, label: 'Third party' },
+              ].map(o => (
+                <button
+                  key={o.label}
+                  className={'chip' + (header.is_third_party === o.tp ? ' is-on' : '')}
+                  aria-pressed={header.is_third_party === o.tp}
+                  title={o.tp ? "The other driver's vehicle, repaired at no cost to them." : undefined}
+                  onClick={() => setH('is_third_party', o.tp)}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* A third party's car is always someone else's accident. The link back
@@ -289,6 +300,9 @@ export default function QuoteBuilder({ shop, quote, initialLines, relatedQuote, 
           </div>
         )}
 
+        {header.is_third_party && (
+          <p className="fault-hint">The other driver&apos;s vehicle, repaired at no cost to them.</p>
+        )}
         {header.liability && (
           <p className="fault-hint">
             {LIABILITIES.find(l => l.key === header.liability)?.hint}
