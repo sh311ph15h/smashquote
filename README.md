@@ -3,6 +3,39 @@
 Multi-tenant quoting / estimating platform for smash repair shops.
 Next.js 16 (App Router) · Supabase Postgres (Auth + Row-Level Security) · Tailwind v4.
 
+Open source under the [MIT License](#license).
+
+## What it is for
+
+SmashQuote is for panel beaters and smash repair shops that need to write
+repair estimates for customers and insurers. One person at the front desk can
+build an itemised quote for a damaged vehicle, the people on the shop floor can
+attach photos to the job from a phone, and the finished quote prints as an A4
+quote or tax invoice.
+
+Each shop that signs up is its own tenant, so one deployment can serve many
+shops without any of them seeing each other's customers, vehicles or quotes.
+Money is in dollars with GST, and the vocabulary (rego, excess, sublets) is
+Australian.
+
+## Using it
+
+1. **Sign up and create your shop** — enter the shop's details, default labour
+   and paint rates, and the terms printed on every quote. These can be changed
+   later under **Settings**.
+2. **Start a quote** — hit **+ New quote**, then fill in the vehicle, customer
+   and insurance claim details, including who is at fault.
+3. **Add the work** — tap a panel on the damage map, or search the pick-list in
+   any of the six sections (R&R / Repair / Paint / Parts / Sublets / Other).
+   Subtotal, GST and total update as you go.
+4. **Add photos** — upload from the quote, or open `/capture` on a phone in the
+   workshop: pick the car by rego, the job and the repair stage, then shoot.
+   Damage can be marked up on top of a photo.
+5. **Print or save as PDF** — open the print view from the quote. Once the
+   quote is marked invoiced, the same page prints as a tax invoice.
+6. **Find it again** — the quote list searches by rego, VIN, make/model,
+   customer, claim or quote number, and filters by fault, party and status.
+
 ## What works today (MVP)
 
 - **Auth & tenancy** — email/password sign-up, each account creates a *shop*
@@ -98,3 +131,14 @@ private). To turn it on:
 That's the only human step — the code is already wired. R2's free tier is 10 GB
 with no egress fees. Because it's the S3 API, the same code points at AWS S3 or
 Backblaze B2 by changing env alone.
+
+## License
+
+Released under the [MIT License](LICENSE) — free to use, modify and
+distribute, including commercially, provided the copyright notice is kept.
+
+One exception: `lib/picklist.js` is generated from a Crashzone pick-list
+(item codes, descriptions and standard times). That data belongs to its
+owner and is not covered by the MIT grant. If you run your own copy, replace
+it with a pick-list you have the rights to — `scripts/build-picklist.mjs`
+shows the expected shape.
